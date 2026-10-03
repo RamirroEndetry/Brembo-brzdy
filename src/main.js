@@ -404,6 +404,13 @@ function startIntro() {
   world.controls.enabled = false;
   $('intro').classList.remove('hidden');
   intro.start();
+  // the film plays over the live scene; without it the 3D attract loop shows
+  const video = $('introVideo');
+  video.addEventListener('playing', () => {
+    video.classList.add('on');
+    intro.setCuts(false);
+  }, { once: true });
+  video.play().catch(() => {});
 }
 
 function leaveIntro() {
@@ -418,7 +425,10 @@ function leaveIntro() {
     menuCamera(0, 10);
     $('menu').classList.remove('hidden');
     $('intro').classList.add('out');
-    setTimeout(() => $('intro').classList.add('hidden'), 600);
+    setTimeout(() => {
+      $('intro').classList.add('hidden');
+      $('introVideo').pause();
+    }, 600);
   });
 }
 

@@ -52,6 +52,7 @@ export function createIntro({ world, getRig, fadeEl, captionEl }) {
   let index = 0;
   let t = 0;
   let leaving = null; // { t, onBlack } while fading out to the menu
+  let cuts = true; // fade to black at shot changes (off while a video covers the scene)
   const pos = new THREE.Vector3();
   const off = new THREE.Vector3();
 
@@ -80,6 +81,9 @@ export function createIntro({ world, getRig, fadeEl, captionEl }) {
       leaving = null;
       setShot(0);
     },
+    setCuts(on) {
+      cuts = on;
+    },
     // Fades to black, calls onBlack (swap the scene there) and stops.
     leave(onBlack) {
       if (!leaving) leaving = { t: 0, onBlack };
@@ -101,7 +105,7 @@ export function createIntro({ world, getRig, fadeEl, captionEl }) {
       // opens after the cut, holds, closes again before the next one
       explode(shot.explode ? Math.min(clamp01((t - 0.9) / 2.4), clamp01((shot.dur - 0.7 - t) / 1.6)) : 0);
 
-      let fade = Math.max(1 - t / CUT, (t - (shot.dur - CUT)) / CUT, 0);
+      let fade = cuts ? Math.max(1 - t / CUT, (t - (shot.dur - CUT)) / CUT, 0) : 0;
       if (leaving) {
         leaving.t += dt;
         fade = Math.max(fade, leaving.t / 0.3);

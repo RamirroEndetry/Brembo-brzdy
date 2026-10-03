@@ -133,9 +133,23 @@ button {
   opacity: 0;
   pointer-events: none;
 }
+.intro-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.8s;
+  pointer-events: none;
+}
+.intro-video.on {
+  opacity: 1;
+}
 .intro-fade {
   position: absolute;
   inset: 0;
+  z-index: 2;
   background: #000;
   opacity: 1;
   pointer-events: none;
@@ -145,6 +159,7 @@ button {
   left: 0;
   right: 0;
   height: 9vh;
+  z-index: 3;
   background: #000;
 }
 .intro-bar.top {
@@ -157,6 +172,7 @@ button {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: linear-gradient(0deg, rgba(4, 5, 7, 0.88) 0%, rgba(4, 5, 7, 0.35) 38%, rgba(4, 5, 7, 0) 62%);
 }
 .intro-copy {
@@ -164,6 +180,7 @@ button {
   left: clamp(24px, 6vw, 96px);
   right: clamp(24px, 6vw, 96px);
   bottom: calc(9vh + clamp(20px, 5vh, 56px));
+  z-index: 4;
   animation: intro-rise 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both;
 }
 .intro h1 {
@@ -204,6 +221,7 @@ button {
   position: absolute;
   right: clamp(24px, 6vw, 96px);
   bottom: calc(9vh + clamp(20px, 5vh, 56px));
+  z-index: 4;
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;

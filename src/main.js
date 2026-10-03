@@ -495,7 +495,11 @@ function clearMarkers() {
 }
 const proj = new THREE.Vector3();
 function screenPos(obj) {
-  obj.getWorldPosition(proj).project(world.camera);
+  if (obj.userData.markerAt) {
+    obj.updateWorldMatrix(true, false);
+    obj.localToWorld(proj.copy(obj.userData.markerAt));
+  } else obj.getWorldPosition(proj);
+  proj.project(world.camera);
   return { x: (proj.x * 0.5 + 0.5) * window.innerWidth, y: (-proj.y * 0.5 + 0.5) * window.innerHeight, visible: proj.z < 1 };
 }
 function updateMarkers() {

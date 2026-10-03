@@ -287,6 +287,8 @@ export function buildBrakes({ variant, worn, preview = false, sus, mats }) {
     recenter(bracket, new THREE.Vector3(0, 0.12, -0.036));
     reg('bracket', bracket, cal, 'Držák třmenu');
     bracket.userData.outPath = [[0, 0.075, 0]];
+    // the origin sits in the pad gap over the disc, so the marker goes on the bridge
+    bracket.userData.markerAt = new THREE.Vector3(0, -0.045, -0.032);
     bracket.userData.clean = (k) => bracketMat.color.lerpColors(dirty, clean, k);
     bracket.userData.clean(preview ? 1 : 0);
     pinList.forEach((p, i) => {

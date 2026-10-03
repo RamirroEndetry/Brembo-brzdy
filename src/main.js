@@ -311,9 +311,6 @@ async function onTarget(name) {
   await Promise.all([ACT[step.act](step, name), follow]);
   if (session !== state.session) return;
   state.remaining.delete(name);
-  // the tool goes back after every use, the next part needs a fresh pick
-  state.tool = 'hand';
-  renderToolbar();
   if (follow) {
     if (state.remaining.size) await world.viewTo(step.pickView, 0.8);
     if (session !== state.session) return;

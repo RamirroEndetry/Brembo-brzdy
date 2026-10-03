@@ -404,13 +404,19 @@ function startIntro() {
   world.controls.enabled = false;
   $('intro').classList.remove('hidden');
   intro.start();
-  // the film plays over the live scene; without it the 3D attract loop shows
+  // The screen stays black until the film plays; only if it cannot play does
+  // the 3D attract loop show instead.
   const video = $('introVideo');
-  video.addEventListener('playing', () => {
-    video.classList.add('on');
-    intro.setCuts(false);
-  }, { once: true });
-  video.play().catch(() => {});
+  const fallback = () => {
+    video.classList.add('hidden');
+    intro.release(false);
+  };
+  video.addEventListener('playing', () => intro.release(true), { once: true });
+  video.addEventListener('error', fallback, { once: true });
+  video.play().catch(fallback);
+  setTimeout(() => {
+    if (video.paused || video.readyState < 3) fallback();
+  }, 4000);
 }
 
 function leaveIntro() {

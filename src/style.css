@@ -139,12 +139,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.8s;
   pointer-events: none;
-}
-.intro-video.on {
-  opacity: 1;
 }
 .intro-fade {
   position: absolute;

@@ -267,7 +267,7 @@ export function createMaterials(brand) {
     padFriction: std({ color: 0x33302c, metalness: 0.15, roughness: 0.95, bumpMap: fineNoise, bumpScale: 1.0 }),
     shim: std({ color: 0x0f1012, metalness: 0.7, roughness: 0.35 }),
     hose: std({ color: 0x0b0b0c, metalness: 0.1, roughness: 0.6 }),
-    greasePaste: std({ color: 0xe9e3cf, metalness: 0, roughness: 0.3, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6 }),
+    greasePaste: std({ color: 0xc27a3e, metalness: 0.45, roughness: 0.38, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6 }),
     greaseSilicone: std({ color: 0x9fd8f4, metalness: 0, roughness: 0.12, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6 }),
     logoWhite: decal(logoWhite),
     logoDark: decal(logoDark, { opacity: 0.85 }),

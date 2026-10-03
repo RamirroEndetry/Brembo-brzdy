@@ -46,6 +46,9 @@ const V = {
   cart: { az: 0.4, el: 0.66, dist: 1.4, steer: 0, look: [1.0, -0.14, 0.5] },
   both: { az: 0.22, el: 0.44, dist: 1.85, steer: 0, look: [0.52, -0.1, 0.28] },
 };
+// Cart shot for picking a part off the cart before the camera moves to
+// `view` for the work itself. Keeps the steering of the work view.
+const fromCart = (view) => ({ ...V.cart, steer: view.steer });
 
 const WHY_TORQUE =
   'Utahovací momenty se liší podle vozu. Hodnoty v trenažéru jsou orientační – při skutečné práci vždy platí dílenská příručka výrobce.';
@@ -197,6 +200,7 @@ const screwDisc = {
   targets: ['discScrew'],
   act: 'bolt',
   view: V.hub,
+  pickView: fromCart(V.hub),
 };
 
 const standardMontaz = [
@@ -235,6 +239,7 @@ const standardMontaz = [
     targets: ['bracketBolt1', 'bracketBolt2'],
     act: 'bolt',
     view: V.back,
+    pickView: fromCart(V.back),
   },
   {
     id: 'placeClips',
@@ -314,6 +319,7 @@ const standardMontaz = [
     targets: ['guideBolt1', 'guideBolt2'],
     act: 'bolt',
     view: V.back,
+    pickView: fromCart(V.back),
   },
 ];
 
@@ -415,6 +421,7 @@ const sportMontaz = [
     targets: ['caliperBolt1', 'caliperBolt2'],
     act: 'bolt',
     view: V.back,
+    pickView: fromCart(V.back),
   },
   {
     id: 'pressPistons',
@@ -469,6 +476,7 @@ const sportMontaz = [
     targets: ['retPin1', 'retPin2'],
     act: 'punchIn',
     view: V.top,
+    pickView: fromCart(V.top),
   },
 ];
 

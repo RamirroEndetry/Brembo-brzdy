@@ -278,7 +278,7 @@ async function enterStep(i) {
   renderPanel();
   renderToolbar();
   world.controls.enabled = false;
-  await Promise.all([world.viewTo(step.view, 1.15), steerTo(step.view.steer || 0)]);
+  await Promise.all([world.viewTo(step.pickView || step.view, 1.15), steerTo(step.view.steer || 0)]);
   if (session !== state.session) return;
   world.controls.enabled = true;
   state.busy = false;
@@ -303,9 +303,18 @@ async function onTarget(name) {
   state.busy = true;
   hideToast();
   removeMarker(name);
-  await ACT[step.act](step, name);
+  // parts picked off the cart: the camera follows the part to the hub and
+  // comes back for the next one
+  const follow = step.pickView ? world.viewTo(step.view, 0.9) : null;
+  if (follow) world.controls.enabled = false;
+  await Promise.all([ACT[step.act](step, name), follow]);
   if (session !== state.session) return;
   state.remaining.delete(name);
+  if (follow) {
+    if (state.remaining.size) await world.viewTo(step.pickView, 0.8);
+    if (session !== state.session) return;
+    world.controls.enabled = true;
+  }
   state.busy = false;
   if (state.remaining.size === 0) completeStep();
 }

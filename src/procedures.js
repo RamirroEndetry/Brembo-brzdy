@@ -112,7 +112,7 @@ const standardDemontaz = [
     tool: 'hand',
     targets: ['bracket'],
     act: 'remove',
-    view: V.front,
+    view: V.top,
   },
   {
     id: 'discScrew',

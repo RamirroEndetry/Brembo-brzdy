@@ -427,6 +427,13 @@ button {
   color: #b8f0cf;
 }
 
+.saver-btn {
+  position: fixed;
+  top: 16px;
+  right: 18px;
+  z-index: 2;
+}
+
 /* ---------- HUD ---------- */
 .topbar {
   position: fixed;

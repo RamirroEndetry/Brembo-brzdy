@@ -377,19 +377,25 @@ async function finish() {
   $('finish').classList.remove('hidden');
 }
 
-function toMenu() {
+// Abandons whatever run is in progress and clears the in-game UI.
+function leaveGame() {
   state.session++;
   cancelAllTweens();
   tools.hide();
-  state.phase = 'menu';
   state.busy = false;
   clearMarkers();
   hideToast();
   $('hud').classList.add('hidden');
   $('finish').classList.add('hidden');
   $('lube').classList.add('hidden');
-  $('menu').classList.remove('hidden');
   world.controls.enabled = false;
+}
+
+function toMenu() {
+  leaveGame();
+  state.phase = 'menu';
+  lastActivity = performance.now();
+  $('menu').classList.remove('hidden');
   setRig('preview');
   setInsets(false);
 }
@@ -397,25 +403,35 @@ function toMenu() {
 // ------------------------------------------------------------------ intro
 const NO_INSETS = { left: 0, right: 0, top: 0, bottom: 0 };
 
+const SAVER_AFTER = 30000; // idle time in the menu before the intro comes back, ms
+let lastActivity = 0;
+let introRun = 0; // bumped on every start, so stale timers and fades are ignored
+
+// Shown on load, from the "Spořič" buttons and after idling in the menu.
 function startIntro() {
+  const run = ++introRun;
+  leaveGame();
   state.phase = 'intro';
+  $('menu').classList.add('hidden');
   setRig('preview', 'sport'); // the red monobloc is the showpiece
   world.setInsets(NO_INSETS);
-  world.controls.enabled = false;
-  $('intro').classList.remove('hidden');
+  $('intro').classList.remove('hidden', 'out');
   intro.start();
   // The screen stays black until the film plays; only if it cannot play does
   // the 3D attract loop show instead.
   const video = $('introVideo');
   const fallback = () => {
+    if (run !== introRun) return;
     video.classList.add('hidden');
     intro.release(false);
   };
-  video.addEventListener('playing', () => intro.release(true), { once: true });
+  video.classList.remove('hidden');
+  video.currentTime = 0;
+  video.addEventListener('playing', () => run === introRun && intro.release(true), { once: true });
   video.addEventListener('error', fallback, { once: true });
   video.play().catch(fallback);
   setTimeout(() => {
-    if (video.paused || video.readyState < 3) fallback();
+    if (state.phase === 'intro' && (video.paused || video.readyState < 3)) fallback();
   }, 4000);
 }
 
@@ -424,14 +440,17 @@ function leaveIntro() {
   audio.unlock();
   audio.pick();
   // the scene is swapped while the screen is black
+  const run = introRun;
   intro.leave(() => {
     state.phase = 'menu';
+    lastActivity = performance.now();
     setRig('preview');
     setInsets(false);
     menuCamera(0, 10);
     $('menu').classList.remove('hidden');
     $('intro').classList.add('out');
     setTimeout(() => {
+      if (run !== introRun) return; // the intro was started again meanwhile
       $('intro').classList.add('hidden');
       $('introVideo').pause();
     }, 600);
@@ -656,6 +675,14 @@ function bindEvents() {
     renderToolbar();
   });
   $('menuBtn').addEventListener('click', toMenu);
+  $('saverBtn').addEventListener('click', startIntro);
+  $('menuSaverBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    startIntro();
+  });
+  for (const type of ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart']) {
+    window.addEventListener(type, () => (lastActivity = performance.now()), { passive: true });
+  }
   $('backBtn').addEventListener('click', toMenu);
   $('againBtn').addEventListener('click', startGame);
   $('nextBtn').addEventListener('click', () => {
@@ -733,6 +760,7 @@ async function boot() {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     tickTweens(dt);
+    if (state.phase === 'menu' && now - lastActivity > SAVER_AFTER) startIntro();
     if (state.phase === 'intro') intro.frame(dt);
     else if (state.phase === 'menu') menuCamera(now / 1000, dt);
     rig.update();

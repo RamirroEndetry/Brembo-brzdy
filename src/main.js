@@ -11,6 +11,7 @@ import { loadBrand, createMaterials } from './materials.js';
 import { createWorld, HUB } from './world.js';
 import { createTools } from './tools3d.js';
 import { createRig } from './rig.js';
+import { createIntro } from './intro.js';
 import { tween, tickTweens, wait, cancelAllTweens, Ease } from './tween.js';
 import { audio } from './audio.js';
 import { ICONS } from './icons.js';
@@ -21,7 +22,7 @@ const $ = (id) => document.getElementById(id);
 const canvas = $('scene');
 
 const state = {
-  phase: 'loading', // loading | menu | game | finish
+  phase: 'loading', // loading | intro | menu | game | finish
   variant: 'standard',
   mode: 'demontaz',
   stepIndex: 0,
@@ -40,13 +41,14 @@ let world;
 let mats;
 let tools;
 let rig;
+let intro;
 let proc = [];
 
 // ------------------------------------------------------------------ rig
-function setRig(mode) {
+function setRig(mode, variant = state.variant) {
   if (rig) rig.destroy();
-  world.setCar(state.variant);
-  rig = createRig({ world, mats, variant: state.variant, mode });
+  world.setCar(variant);
+  rig = createRig({ world, mats, variant, mode });
 }
 
 function steerTo(angle, dur = 0.9) {
@@ -255,6 +257,7 @@ function startGame() {
   setRig(state.mode);
   proc = getProcedure(state.variant, state.mode);
   Object.assign(state, { phase: 'game', stepIndex: 0, tool: null, busy: false, score: 0, mistakes: 0, startTime: performance.now() });
+  $('intro').classList.add('hidden');
   $('menu').classList.add('hidden');
   $('finish').classList.add('hidden');
   $('hud').classList.remove('hidden');
@@ -389,6 +392,34 @@ function toMenu() {
   world.controls.enabled = false;
   setRig('preview');
   setInsets(false);
+}
+
+// ------------------------------------------------------------------ intro
+const NO_INSETS = { left: 0, right: 0, top: 0, bottom: 0 };
+
+function startIntro() {
+  state.phase = 'intro';
+  setRig('preview', 'sport'); // the red monobloc is the showpiece
+  world.setInsets(NO_INSETS);
+  world.controls.enabled = false;
+  $('intro').classList.remove('hidden');
+  intro.start();
+}
+
+function leaveIntro() {
+  if (state.phase !== 'intro') return;
+  audio.unlock();
+  audio.pick();
+  // the scene is swapped while the screen is black
+  intro.leave(() => {
+    state.phase = 'menu';
+    setRig('preview');
+    setInsets(false);
+    menuCamera(0, 10);
+    $('menu').classList.remove('hidden');
+    $('intro').classList.add('out');
+    setTimeout(() => $('intro').classList.add('hidden'), 600);
+  });
 }
 
 // ------------------------------------------------------------------ UI
@@ -575,7 +606,7 @@ function bindEvents() {
   });
   // hover lookups run at most once per frame
   bindEvents.hover = () => {
-    if (!hoverEvent || state.phase === 'menu' || down) return;
+    if (!hoverEvent || state.phase === 'menu' || state.phase === 'intro' || down) return;
     const e = hoverEvent;
     hoverEvent = null;
     const label = labelAt(e);
@@ -599,6 +630,7 @@ function bindEvents() {
     renderMenu();
     if (key === 'variant') setRig('preview');
   });
+  $('intro').addEventListener('click', leaveIntro);
   $('startBtn').addEventListener('click', startGame);
   $('toolbar').addEventListener('click', (e) => {
     const btn = e.target.closest('.tool');
@@ -632,8 +664,12 @@ function bindEvents() {
   });
   $('lubeBtn').addEventListener('click', () => $('lube').classList.remove('hidden'));
   $('lubeClose').addEventListener('click', () => $('lube').classList.add('hidden'));
-  window.addEventListener('resize', () => setInsets(state.phase !== 'menu'));
+  window.addEventListener('resize', () => {
+    if (state.phase === 'intro') world.setInsets(NO_INSETS);
+    else setInsets(state.phase !== 'menu');
+  });
   window.addEventListener('keydown', (e) => {
+    if (state.phase === 'intro' && (e.key === 'Enter' || e.key === ' ')) leaveIntro();
     if (state.phase !== 'game') return;
     const i = '1234567890-='.indexOf(e.key);
     if (i >= 0 && TOOLS[i]) {
@@ -670,21 +706,19 @@ async function boot() {
   mats = createMaterials(brand);
   world = createWorld(canvas, mats);
   tools = createTools(world.scene, mats);
-  setRig('preview');
+  intro = createIntro({ world, getRig: () => rig, fadeEl: $('introFade'), captionEl: $('introCaption') });
   renderMenu();
   renderToolbar();
   bindEvents();
-  state.phase = 'menu';
-  $('menu').classList.remove('hidden');
-  setInsets(false);
-  menuCamera(0, 10);
+  startIntro();
 
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     tickTweens(dt);
-    if (state.phase === 'menu') menuCamera(now / 1000, dt);
+    if (state.phase === 'intro') intro.frame(dt);
+    else if (state.phase === 'menu') menuCamera(now / 1000, dt);
     rig.update();
     bindEvents.hover();
     updateMarkers();
@@ -702,6 +736,7 @@ async function boot() {
     get rig() { return rig; },
     get proc() { return proc; },
     startGame,
+    leaveIntro,
     onTarget,
     // steps the simulation without waiting for animation frames (hidden tabs throttle them)
     async advance(seconds) {

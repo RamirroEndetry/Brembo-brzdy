@@ -273,6 +273,7 @@ async function enterStep(i) {
   state.stepIndex = i;
   state.remaining = new Set(step.targets);
   state.stepMistakes = 0;
+  state.tool = 'hand'; // every step starts with the bare hand
   state.busy = true;
   clearMarkers();
   renderPanel();

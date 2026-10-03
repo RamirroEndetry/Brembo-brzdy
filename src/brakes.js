@@ -418,6 +418,7 @@ export function buildBrakes({ variant, worn, preview = false, sus, mats }) {
     const cm = mats.caliperRed;
     const A = 0.593;
     const A2 = 0.445;
+    const LUG_X = 0.124;
     const soft = { bevel: 0.009, segs: 5, curveSegments: 12 };
     // Annular sector with rounded corners. The fillets take their full radius
     // out of the arcs (not just out of the first arc segment), otherwise the
@@ -456,9 +457,9 @@ export function buildBrakes({ variant, worn, preview = false, sus, mats }) {
       caliper.add(M(at(cap, sx * 0.0306, 0.1437, -0.1175), cm));
     }
     for (const sx of [-1, 1]) {
-      // radial mounting lugs
-      caliper.add(M(at(cylY(0.017, 0.098, 0.128, 28), sx * 0.092, 0, -0.098), cm));
-      caliper.add(M(box(Math.min(sx * 0.064, sx * 0.09), Math.max(sx * 0.064, sx * 0.09), 0.1, 0.126, -0.113, -0.084, 0.005), cm));
+      // radial mounting lugs, far enough out that the bolt heads clear the body
+      caliper.add(M(at(cylY(0.017, 0.098, 0.128, 28), sx * LUG_X, 0, -0.098), cm));
+      caliper.add(M(box(Math.min(sx * 0.064, sx * (LUG_X - 0.002)), Math.max(sx * 0.064, sx * (LUG_X - 0.002)), 0.1, 0.126, -0.113, -0.084, 0.005), cm));
       // bleed nipples on the outer half
       const bl = new THREE.Group();
       bl.add(M(cylY(0.004, 0, 0.012, 10), mats.zinc));
@@ -523,7 +524,7 @@ export function buildBrakes({ variant, worn, preview = false, sus, mats }) {
 
     for (const [i, sx] of [-1, 1].entries()) {
       const b = reg(`caliperBolt${i + 1}`, buildBolt(mats, { af: 0.017, headH: 0.012, r: 0.006, len: 0.05, socket: true, flange: false }), cal, 'Radiální šroub třmenu');
-      b.position.set(sx * 0.092, 0.128, -0.098);
+      b.position.set(sx * LUG_X, 0.128, -0.098);
       b.rotation.x = -Math.PI / 2;
     }
 

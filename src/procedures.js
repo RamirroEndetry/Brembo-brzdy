@@ -43,7 +43,6 @@ const V = {
   back: { az: 1.16, el: 0.06, dist: 0.8, steer: -0.66, look: [0.06, 0.02, 0.04] },
   top: { az: 1.05, el: 0.36, dist: 0.9, steer: -0.38, look: [0.07, 0.03, 0] },
   hang: { az: 0.35, el: 0.16, dist: 0.8, steer: 0, look: [0.07, 0.16, 0] },
-  hangSport: { az: 0.3, el: 0.34, dist: 0.8, steer: 0, look: [0.17, 0.24, 0.02] },
   cart: { az: 0.4, el: 0.66, dist: 1.4, steer: 0, look: [1.0, -0.14, 0.5] },
   both: { az: 0.22, el: 0.44, dist: 1.85, steer: 0, look: [0.52, -0.1, 0.28] },
 };
@@ -404,16 +403,6 @@ const sportMontaz = [
   placeDisc(true),
   screwDisc,
   {
-    id: 'pressPistons',
-    title: 'Zatlačte pístky do třmenu',
-    text: 'Pístky jsou vysunuté podle starých destiček. Dokud třmen visí na háku, stlačovákem je rovnoměrně zatlačte zpět, všechny čtyři.',
-    why: 'Kapalina se při tom vrací do vyrovnávací nádobky – sledujte hladinu. Pístky tlačte rovně, zkřížený pístek poškodí těsnění.',
-    tool: 'pistonTool',
-    targets: ['caliper'],
-    act: 'press',
-    view: V.hangSport,
-  },
-  {
     id: 'mountCaliper',
     title: 'Nasaďte třmen',
     text: 'Sundejte třmen z háku a nasuňte ho přes kotouč na těhlici. Hadice nesmí být překroucená.',
@@ -433,6 +422,16 @@ const sportMontaz = [
     act: 'bolt',
     view: V.back,
     pickView: fromCart(V.back),
+  },
+  {
+    id: 'pressPistons',
+    title: 'Zatlačte pístky do třmenu',
+    text: 'Pístky jsou vysunuté podle starých destiček. Stlačovákem je rovnoměrně zatlačte zpět, všechny čtyři.',
+    why: 'Kapalina se při tom vrací do vyrovnávací nádobky – sledujte hladinu. Pístky tlačte rovně, zkřížený pístek poškodí těsnění.',
+    tool: 'pistonTool',
+    targets: ['caliper'],
+    act: 'press',
+    view: V.top,
   },
   {
     id: 'pastePads',

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brzdový servis – interaktivní trenažér</title>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <div class="vignette"></div>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <span>Otevírám dílnu…</span>
+    </div>
+
+    <!-- start menu -->
+    <section id="menu" class="menu hidden">
+      <div class="menu-card">
+        <div class="brand-row">
+          <span class="brand-logo" data-brand></span>
+          <span class="brand-sub">Servisní trenažér</span>
+        </div>
+        <h1>Brzdy <em>krok za krokem</em></h1>
+        <p class="lead">
+          Postavte se k autu jako mechanik. Kolo je dole, před vámi těhlice, tlumič a brzda. Rozeberte ji a složte
+          zpátky – se správným nářadím, mazivem a utahovacími momenty.
+        </p>
+
+        <h2>1 · Brzdová sestava</h2>
+        <div class="choice-row" id="variantChoices"></div>
+
+        <h2>2 · Co budete dělat</h2>
+        <div class="choice-row" id="modeChoices"></div>
+
+        <button id="startBtn" class="btn-primary">Do dílny <span>→</span></button>
+      </div>
+    </section>
+
+    <!-- in-game HUD -->
+    <div id="hud" class="hidden">
+      <header class="topbar">
+        <span class="brand-logo small" data-brand></span>
+        <div class="job">
+          <strong id="jobTitle"></strong>
+          <span id="jobSub"></span>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+        <div class="stat"><span>Body</span><b id="score">0</b></div>
+        <div class="stat"><span>Chyby</span><b id="mistakes">0</b></div>
+        <button id="lubeBtn" class="btn-ghost" title="Kam patří jaké mazivo">Mazací plán</button>
+        <button id="hintBtn" class="btn-ghost on" title="Zvýrazňovat správné nářadí">Nápověda</button>
+        <button id="soundBtn" class="btn-ghost on" title="Zvuk">Zvuk</button>
+        <button id="menuBtn" class="btn-ghost">Menu</button>
+      </header>
+
+      <aside class="panel">
+        <div class="step-count" id="stepCount"></div>
+        <h2 id="stepTitle"></h2>
+        <p id="stepText"></p>
+        <div class="need" id="stepNeed"></div>
+        <div class="note torque hidden" id="stepTorque"><span>Utahovací moment</span><b></b></div>
+        <div class="note why hidden" id="stepWhy"><span>Proč</span><p></p></div>
+        <div class="note warn hidden" id="stepWarn"><span>Pozor</span><p></p></div>
+        <div class="note tip hidden" id="stepTip"><span>Tip z dílny</span><p></p></div>
+        <ol class="steps" id="stepList"></ol>
+      </aside>
+
+      <div class="toolbar" id="toolbar"></div>
+      <div class="hint-orbit">Tažením myši otáčíte pohled · kolečkem přibližujete</div>
+      <div id="markers"></div>
+      <div id="tooltip" class="tooltip hidden"></div>
+      <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <!-- finish -->
+    <section id="finish" class="modal hidden">
+      <div class="modal-card">
+        <div class="stars" id="stars"></div>
+        <h2 id="finishTitle"></h2>
+        <p id="finishSub"></p>
+        <div class="finish-stats">
+          <div><span>Body</span><b id="fScore"></b></div>
+          <div><span>Chyby</span><b id="fMistakes"></b></div>
+          <div><span>Čas</span><b id="fTime"></b></div>
+        </div>
+        <h3>Co si odnést</h3>
+        <ul id="lessons"></ul>
+        <div class="modal-actions">
+          <button id="nextBtn" class="btn-primary"></button>
+          <button id="againBtn" class="btn-ghost">Zopakovat</button>
+          <button id="backBtn" class="btn-ghost">Zpět do menu</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- lubrication chart -->
+    <section id="lube" class="modal hidden">
+      <div class="modal-card">
+        <h2>Mazací plán brzdy</h2>
+        <p>Správné mazivo na správném místě rozhoduje o tom, jestli brzda pracuje tiše a rovnoměrně.</p>
+        <ul class="lube-list" id="lubeList"></ul>
+        <div class="modal-actions">
+          <button id="lubeClose" class="btn-primary">Rozumím</button>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

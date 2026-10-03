@@ -419,7 +419,26 @@ export function buildBrakes({ variant, worn, preview = false, sus, mats }) {
     const A = 0.593;
     const A2 = 0.445;
     const soft = { bevel: 0.009, segs: 5, curveSegments: 12 };
-    const band = (r0, r1, p0, p1, fo, fi, n = 24) => filletShape([...arcPts(r1, p0, p1, n, fo), ...arcPts(r0, p1, p0, n, fi)]);
+    // Annular sector with rounded corners. The fillets take their full radius
+    // out of the arcs (not just out of the first arc segment), otherwise the
+    // corners end up tighter than the bevel and the extrusion tears there.
+    const band = (r0, r1, p0, p1, fo, fi, n = 24) => {
+      const P = (r, phi) => [r * Math.sin(phi), r * Math.cos(phi)];
+      const s = new THREE.Shape();
+      const corner = (c, to) => s.quadraticCurveTo(...c, ...to);
+      const ao = fo / r1;
+      const ai = fi / r0;
+      s.moveTo(...P(r1 - fo, p0));
+      corner(P(r1, p0), P(r1, p0 + ao));
+      for (const q of arcPts(r1, p0 + ao, p1 - ao, n).slice(1)) s.lineTo(...q);
+      corner(P(r1, p1), P(r1 - fo, p1));
+      s.lineTo(...P(r0 + fi, p1));
+      corner(P(r0, p1), P(r0, p1 - ai));
+      for (const q of arcPts(r0, p1 - ai, p0 + ai, n).slice(1)) s.lineTo(...q);
+      corner(P(r0, p0), P(r0 + fi, p0));
+      s.closePath();
+      return s;
+    };
     // two halves with soft cast edges, plus the raised panel that carries the logo
     caliper.add(M(extrudeXY(band(0.11, 0.205, -A, A, 0.018, 0.022), 0, 0.046, soft), cm));
     caliper.add(M(extrudeXY(band(0.11, 0.205, -A, A, 0.018, 0.022), -0.118, -0.072, soft), cm));

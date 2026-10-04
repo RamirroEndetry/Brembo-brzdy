@@ -44,14 +44,23 @@ let rig;
 let intro;
 let proc = [];
 
+function getCurrentStep() {
+  if (!Array.isArray(proc) || !proc.length) return null;
+  if (state.stepIndex < 0) return proc[0];
+  if (state.stepIndex >= proc.length) return proc[proc.length - 1];
+  return proc[state.stepIndex];
+}
+
 // ------------------------------------------------------------------ rig
 function setRig(mode, variant = state.variant) {
   if (rig) rig.destroy();
+  if (!world) return;
   world.setCar(variant);
   rig = createRig({ world, mats, variant, mode });
 }
 
 function steerTo(angle, dur = 0.9) {
+  if (!rig) return Promise.resolve();
   const from = rig.sus.steerAngle;
   if (Math.abs(from - angle) < 1e-4) return Promise.resolve();
   const r = rig;
@@ -250,6 +259,7 @@ const ACT = {
 
 // ------------------------------------------------------------------ game flow
 function startGame() {
+  if (!world || !rig) return;
   audio.unlock();
   state.session++;
   cancelAllTweens();
@@ -272,7 +282,9 @@ function startGame() {
 
 async function enterStep(i) {
   const session = state.session;
+  if (!Array.isArray(proc) || !proc.length) return;
   const step = proc[i];
+  if (!step) return;
   state.stepIndex = i;
   state.remaining = new Set(step.targets);
   state.stepMistakes = 0;
@@ -291,7 +303,8 @@ async function enterStep(i) {
 
 async function onTarget(name) {
   if (state.phase !== 'game' || state.busy || !state.remaining.has(name)) return;
-  const step = proc[state.stepIndex];
+  const step = getCurrentStep();
+  if (!step) return;
   if (!state.tool) {
     toast('Nejdřív si dole vyberte nářadí.', 'bad');
     audio.error();
@@ -340,6 +353,7 @@ const PRAISE = ['Správně.', 'Přesně tak.', 'Hotovo, jde se dál.', 'Čistá 
 
 async function completeStep() {
   const session = state.session;
+  if (!proc.length) return;
   state.busy = true;
   state.score += Math.max(25, 100 - 25 * state.stepMistakes);
   updateStats(state.stepIndex + 1);
@@ -354,6 +368,7 @@ async function completeStep() {
 
 async function finish() {
   const session = state.session;
+  if (!world) return;
   state.phase = 'finish';
   clearMarkers();
   world.controls.enabled = false;
@@ -381,14 +396,14 @@ async function finish() {
 function leaveGame() {
   state.session++;
   cancelAllTweens();
-  tools.hide();
+  if (tools) tools.hide();
   state.busy = false;
   clearMarkers();
   hideToast();
   $('hud').classList.add('hidden');
   $('finish').classList.add('hidden');
   $('lube').classList.add('hidden');
-  world.controls.enabled = false;
+  if (world) world.controls.enabled = false;
 }
 
 function toMenu() {
@@ -409,6 +424,7 @@ let introRun = 0; // bumped on every start, so stale timers and fades are ignore
 
 // Shown on load, from the "Spořič" buttons and after idling in the menu.
 function startIntro() {
+  if (!world || !intro) return;
   const run = ++introRun;
   leaveGame();
   state.phase = 'intro';
@@ -480,16 +496,24 @@ function renderMenu() {
 }
 
 function renderToolbar() {
-  const step = proc[state.stepIndex];
+  const step = getCurrentStep();
   const allowed = step && state.phase === 'game' ? [].concat(step.tool) : [];
   $('toolbar').innerHTML = TOOLS.map(
     (t) =>
-      `<button class="tool ${state.tool === t.id ? 'selected' : ''} ${state.hints && allowed.includes(t.id) ? 'hint' : ''}" data-tool="${t.id}" title="${t.desc}">${ICONS[t.id]}<span>${t.name}</span></button>`,
+      `<button class="tool ${state.tool === t.id ? 'selected' : ''} ${state.hints && allowed.includes(t.id) ? 'hint' : ''}" data-tool="${t.id}" title="${t.desc}">${ICONS[t.id]}<span>${t.name}</span></button>`
   ).join('');
 }
 
 function renderPanel() {
-  const step = proc[state.stepIndex];
+  const step = getCurrentStep();
+  if (!step) {
+    $('stepCount').textContent = 'Krok 0 / 0';
+    $('stepTitle').textContent = 'Příprava';
+    $('stepText').textContent = 'Načítání postupu…';
+    $('stepNeed').innerHTML = '<i class="dot"></i><span>Čekání na data hry.</span>';
+    $('stepList').innerHTML = '';
+    return;
+  }
   $('stepCount').textContent = `Krok ${state.stepIndex + 1} / ${proc.length}`;
   $('stepTitle').textContent = step.title;
   $('stepText').textContent = step.text;
@@ -520,7 +544,9 @@ function markStepDone(i) {
 function updateStats(doneSteps = state.stepIndex) {
   $('score').textContent = state.score;
   $('mistakes').textContent = state.mistakes;
-  $('progressBar').style.width = `${(doneSteps / Math.max(1, proc.length)) * 100}%`;
+  const totalSteps = Math.max(1, proc.length || 1);
+  const safeDone = Math.min(Math.max(doneSteps, 0), totalSteps);
+  $('progressBar').style.width = `${(safeDone / totalSteps) * 100}%`;
 }
 
 let toastTimer = 0;
@@ -569,8 +595,15 @@ function screenPos(obj) {
   return { x: (proj.x * 0.5 + 0.5) * window.innerWidth, y: (-proj.y * 0.5 + 0.5) * window.innerHeight, visible: proj.z < 1 };
 }
 function updateMarkers() {
+  if (!rig || !world || !state.remaining) return;
   for (const [name, el] of markers) {
-    const s = screenPos(rig.parts[name]);
+    const part = rig.parts[name];
+    if (!part) {
+      el.remove();
+      markers.delete(name);
+      continue;
+    }
+    const s = screenPos(part);
     el.style.display = s.visible ? '' : 'none';
     el.style.transform = `translate(${s.x}px, ${s.y}px)`;
   }
@@ -607,7 +640,7 @@ function labelAt(e) {
   return null;
 }
 function pick(e) {
-  if (state.phase !== 'game' || state.busy) return;
+  if (state.phase !== 'game' || state.busy || !rig) return;
   setRay(e);
   let best = null;
   for (const name of state.remaining) {
@@ -763,7 +796,7 @@ async function boot() {
     if (state.phase === 'menu' && now - lastActivity > SAVER_AFTER) startIntro();
     if (state.phase === 'intro') intro.frame(dt);
     else if (state.phase === 'menu') menuCamera(now / 1000, dt);
-    rig.update();
+    if (rig) rig.update();
     bindEvents.hover();
     updateMarkers();
     world.render();
@@ -784,6 +817,7 @@ async function boot() {
     onTarget,
     // steps the simulation without waiting for animation frames (hidden tabs throttle them)
     async advance(seconds) {
+      if (!rig) return;
       for (let t = 0; t < seconds; t += 0.04) {
         tickTweens(0.04);
         rig.update();

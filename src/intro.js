@@ -85,11 +85,11 @@ export function createIntro({ world, getRig, fadeEl, captionEl }) {
       setShot(0);
     },
     // Lifts the black hold: over a playing video (no cuts) or onto the 3D loop.
+    // May be called again with `true` when the video only starts later.
     release(video) {
-      if (!hold) return;
+      if (hold) t = 0;
       hold = false;
       cuts = !video;
-      t = 0;
       if (video) fadeEl.style.opacity = 0;
     },
     // Fades to black, calls onBlack (swap the scene there) and stops.

@@ -421,6 +421,7 @@ const NO_INSETS = { left: 0, right: 0, top: 0, bottom: 0 };
 const SAVER_AFTER = 30000; // idle time in the menu before the intro comes back, ms
 let lastActivity = 0;
 let introRun = 0; // bumped on every start, so stale timers and fades are ignored
+let introAbort = null; // drops the previous run's video listeners
 
 // Shown on load, from the "Spořič" buttons and after idling in the menu.
 function startIntro() {
@@ -433,22 +434,42 @@ function startIntro() {
   world.setInsets(NO_INSETS);
   $('intro').classList.remove('hidden', 'out');
   intro.start();
-  // The screen stays black until the film plays; only if it cannot play does
-  // the 3D attract loop show instead.
+  // The screen stays black until the film plays. If it is slow to load or the
+  // browser refuses to autoplay it, the 3D attract loop shows meanwhile and the
+  // film takes over as soon as it does start (phones on mobile data).
   const video = $('introVideo');
+  const live = () => run === introRun && state.phase === 'intro';
+  const showFilm = () => {
+    if (!live()) return;
+    video.classList.remove('veiled');
+    intro.release(true);
+  };
+  // The video is only veiled, never display:none - mobile browsers refuse to
+  // autoplay a video that is not rendered.
   const fallback = () => {
-    if (run !== introRun) return;
-    video.classList.add('hidden');
+    if (!live() || (!video.paused && video.readyState >= 3)) return;
+    video.classList.add('veiled');
     intro.release(false);
   };
-  video.classList.remove('hidden');
-  video.currentTime = 0;
-  video.addEventListener('playing', () => run === introRun && intro.release(true), { once: true });
-  video.addEventListener('error', fallback, { once: true });
-  video.play().catch(fallback);
-  setTimeout(() => {
-    if (state.phase === 'intro' && (video.paused || video.readyState < 3)) fallback();
-  }, 4000);
+  const tryPlay = () => {
+    if (live() && video.paused) video.play().catch(fallback);
+  };
+  if (introAbort) introAbort.abort();
+  introAbort = new AbortController();
+  const { signal } = introAbort;
+  // phones only autoplay a video that is muted as a property, not just as an attribute
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.classList.remove('veiled');
+  if (video.readyState > 0) video.currentTime = 0;
+  video.addEventListener('playing', showFilm, { signal });
+  video.addEventListener('canplay', tryPlay, { signal });
+  video.addEventListener('error', fallback, { signal });
+  document.addEventListener('visibilitychange', () => !document.hidden && tryPlay(), { signal });
+  tryPlay();
+  if (!video.paused && video.readyState >= 3) showFilm(); // already running from the autoplay attribute
+  setTimeout(fallback, 4000);
 }
 
 function leaveIntro() {

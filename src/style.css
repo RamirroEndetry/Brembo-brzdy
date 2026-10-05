@@ -141,6 +141,15 @@ button {
   object-fit: cover;
   pointer-events: none;
 }
+.intro-video.veiled {
+  opacity: 0;
+}
+/* no native play overlay when a phone refuses to autoplay */
+.intro-video::-webkit-media-controls,
+.intro-video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
 .intro-fade {
   position: absolute;
   inset: 0;

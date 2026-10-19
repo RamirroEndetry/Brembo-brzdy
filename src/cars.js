@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { M, box, TAU } from './geo.js';
 import { buildBody, curve, endTaper, smoothstep, poly, line, sample, text, rings, plate } from './carbody.js';
+import { logoCanvas } from './materials.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const mirror = (pts) => pts.map((p) => [-p[0], p[1]]);
@@ -276,7 +277,9 @@ const SPECS = { standard: a3Spec, sport: s1Spec };
 // Builds the complete car in car coordinates (origin = front arch centre).
 // `fenderZ` is where the outer face of the front wing ends up on the world z axis.
 export function buildCar(variant, mats, buildWheel, droop, fenderZ = 0.088) {
-  const spec = SPECS[variant](mats.brand.img);
+  // White UI artwork needs a contrasting red tint on the light number plates.
+  const plateLogo = logoCanvas(mats.brand, { fg: '#e43038', pad: 0 });
+  const spec = SPECS[variant](plateLogo);
   const sport = variant === 'sport';
   const lv0 = { yb: 0, yBelt: 0.5, yCrease: 0.45 };
   spec.zc = fenderZ - spec.side(0, spec.AR * 0.8, lv0);

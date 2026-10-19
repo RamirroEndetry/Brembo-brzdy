@@ -315,7 +315,7 @@ export function plate(g, img, cx, cy, w, h, flipX = false) {
     text(g, 'brembo', cx, cy, h * 0.62, '#c8101c', { italic: true });
     return;
   }
-  const ratio = (img.naturalWidth || 4.3) / (img.naturalHeight || 1);
+  const ratio = (img.naturalWidth || img.width || 4.3) / (img.naturalHeight || img.height || 1);
   const lw = Math.min(w * 0.86, h * 0.74 * ratio);
   g.save();
   g.translate(cx, cy);

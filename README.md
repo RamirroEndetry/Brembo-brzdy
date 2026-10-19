@@ -25,8 +25,10 @@ npm run build
 
 ## Logo
 
-Aplikace používá logo z `public/brand/brembo-logo.png` (kopie souboru `Logo/Brembo_logo.png`).
-Při výměně stačí soubor přepsat; funguje i `brembo-logo.svg`. Na třmenech a destičkách se logo samo obarví.
+Aplikace používá nové bílé logo z `public/brand/new logo_white.png` s průhledným pozadím,
+aby bylo čitelné na tmavém rozhraní. Na třmenech, destičkách a dalších plochách ve 3D scéně
+se stejné logo samo obarví. Při výměně stačí soubor přepsat; jako záloha se načítá
+také `brembo-logo.svg` nebo `brembo-logo.png` ve stejné složce.
 
 ## Auta
 

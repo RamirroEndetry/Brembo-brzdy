@@ -27,10 +27,10 @@ function tex(cv, { srgb = true, repeat = null } = {}) {
 }
 
 // ---- brand ---------------------------------------------------------------
-// The client's official logo can be dropped into public/brand/ (SVG or PNG with
-// a transparent background). Without it a plain wordmark is rendered instead.
+// Use the white official wordmark on the dark UI; 3D decals tint its alpha mask.
+// Keep the legacy filenames as fallbacks for older asset packages.
 export async function loadBrand() {
-  for (const file of ['brand/brembo-logo.svg', 'brand/brembo-logo.png']) {
+  for (const file of ['brand/new logo_white.png', 'brand/brembo-logo.svg', 'brand/brembo-logo.png']) {
     try {
       const r = await fetch(file);
       const type = r.headers.get('content-type') || '';
